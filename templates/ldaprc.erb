@@ -4,7 +4,7 @@
 # If you need a fresh copy, simply delete the file and Puppet will regenerate
 # it
 
-TLS_CACERTDIR <%= @app_pki_ca_dir %>
-TLS_CERT <%= @app_pki_cert %>
-TLS_KEY <%= @app_pki_key %>
+TLS_CACERTDIR <%= @_pki_ca_dir %>
+TLS_CERT <%= @_pki_cert %>
+TLS_KEY <%= @_pki_key %>
 <% end -%>

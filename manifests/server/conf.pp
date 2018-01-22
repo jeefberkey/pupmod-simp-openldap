@@ -166,7 +166,7 @@
 #
 #     TLSProtocolMin 3.2
 #
-#   would require TLS 1.1. 
+#   would require TLS 1.1.
 #
 # @param tls_verify_client
 #   TLS client verification level

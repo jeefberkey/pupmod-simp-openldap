@@ -61,7 +61,20 @@ ldap_conf_content = {
     "REFERRALS           on\n" +
     "SIZELIMIT           0\n" +
     "TIMELIMIT           15\n" +
-    "DEREF               never\n"
+    "DEREF               never\n",
+
+  :with_ipa =>
+    "URI                 ldap://server1.bar.baz ldap://server2.bar.baz\n" +
+    "BASE                DC=bar,DC=baz\n" +
+    "BINDDN              cn=hostAuth,ou=Hosts,DC=bar,DC=baz\n" +
+    "REFERRALS           on\n" +
+    "SIZELIMIT           0\n" +
+    "TIMELIMIT           15\n" +
+    "DEREF               never\n" +
+    "TLS_CACERTDIR       /etc/ipa/nssdb\n" +
+    "TLS_CIPHER_SUITE    DEFAULT:!MEDIUM\n" +
+    "TLS_REQCERT         allow\n" +
+    "TLS_CRLCHECK        none\n",
 }
 
 ldaprc_content = {
@@ -83,6 +96,15 @@ ldaprc_content = {
     "TLS_CERT /etc/pki/simp_apps/openldap/x509/public/myserver.test.local.pub\n" +
     "TLS_KEY /etc/pki/simp_apps/openldap/x509/private/myserver.test.local.pem\n",
 
+  :with_ipa =>
+    "# This file placed by Puppet, but may be modified\n" +
+    "#\n" +
+    "# If you need a fresh copy, simply delete the file and Puppet will regenerate\n" +
+    "# it\n\n" +
+    "TLS_CACERTDIR /etc/ipa/nssdb\n" +
+    "TLS_CERT ipaserver.test.local\n" +
+    "TLS_KEY /etc/ipa/nssdb/pwdfile.txt\n",
+
   :without_tls => ''
 }
 
@@ -91,12 +113,12 @@ shared_examples_for "a ldap config generator" do
   it { is_expected.to create_class('simp_openldap') }
   it { is_expected.to create_class('simp_openldap::client') }
   it { is_expected.to create_file('/etc/openldap/ldap.conf').with_content( ldap_conf_content[content_option] ) }
-    it {
-      if ldaprc_content[content_option]
-        is_expected.to create_file('/root/.ldaprc').with_content( ldaprc_content[content_option] )
-      else
-        is_expected.to create_file('/root/.ldaprc').with_content( ldaprc_content[:default] )
-      end
+  it {
+    if ldaprc_content[content_option]
+      is_expected.to create_file('/root/.ldaprc').with_content( ldaprc_content[content_option] )
+    else
+      is_expected.to create_file('/root/.ldaprc').with_content( ldaprc_content[:default] )
+    end
   }
   it { is_expected.to create_package('nss-pam-ldapd') }
   it { is_expected.to create_package("openldap-clients.#{facts[:hardwaremodel]}") }
@@ -168,6 +190,21 @@ describe 'simp_openldap::client' do
             :app_pki_crl => '/some/path/my_crlfile',
             :use_tls     => true
           }}
+          it_should_behave_like "a ldap config generator"
+        end
+
+        context 'when connected to an IPA server' do
+          let(:content_option) { :with_ipa }
+          let(:hieradata) { 'pki_true' }
+          let(:facts) {
+            super().merge!(
+              ipa: {
+                domain: 'test.local',
+                server: 'ipaserver.test.local'
+              }
+            )
+          }
+
           it_should_behave_like "a ldap config generator"
         end
       end

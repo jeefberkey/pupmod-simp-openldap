@@ -45,6 +45,7 @@ class simp_openldap::client (
   Integer                                      $sizelimit             = 0,
   Integer                                      $timelimit             = 15,
   Variant[Enum['simp'],Boolean]                $use_tls               = $::simp_openldap::pki,
+  Boolean                                      $overwrite_pki_for_ipa = true,
   Stdlib::Absolutepath                         $app_pki_ca_dir        = $::simp_openldap::app_pki_ca_dir,
   Stdlib::Absolutepath                         $app_pki_cert          = $::simp_openldap::app_pki_cert,
   Stdlib::Absolutepath                         $app_pki_key           = $::simp_openldap::app_pki_key,
@@ -70,6 +71,17 @@ class simp_openldap::client (
   }
   else {
     $_tls_cipher_suite = $tls_cipher_suite
+  }
+
+  if $overwrite_pki_for_ipa and $facts['ipa'] {
+    $_pki_ca_dir = '/etc/ipa/nssdb'
+    $_pki_cert   = $facts['ipa']['server']
+    $_pki_key    = '/etc/ipa/nssdb/pwdfile.txt'
+  }
+  else {
+    $_pki_ca_dir = $app_pki_ca_dir
+    $_pki_cert   = $app_pki_cert
+    $_pki_key    = $app_pki_key
   }
 
   file { '/etc/openldap/ldap.conf':
